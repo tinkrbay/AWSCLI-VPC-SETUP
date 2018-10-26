@@ -384,7 +384,7 @@ sudo mkdir php-watermark-gallery-backup
 sudo mv /var/www/html/php-watermark-gallery/* /home/ec2-user/php-watermark-gallery-backup/
 sudo cp /etc/fstab /home/ec2-user/fstabbackup
 sudo mkfs -t ext4 /dev/xvdb
-sudo sed -i -- '$ a /dev/xvdb	/var/www/html/php-watermark-gallery/	ext4	defaults,nofail	0	2' /etc/fstab
+sudo sed -i -- '$ a /dev/xvdb   /var/www/html/php-watermark-gallery/    ext4    defaults,nofail 0   2' /etc/fstab
 sudo mount -a
 sudo mv /home/ec2-user/php-watermark-gallery-backup/* /var/www/html/php-watermark-gallery-backup/
 sudo chmod -R 777 /var/www/html/
