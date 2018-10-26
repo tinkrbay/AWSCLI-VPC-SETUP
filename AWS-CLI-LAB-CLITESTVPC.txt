@@ -365,34 +365,10 @@ Next we will add the inbound rules to the security group created above
 aws ec2 authorize-security-group-ingress --group-id sg-xxxxxxxx --protocol tcp --port 80 --cidr 0.0.0.0/0
 aws ec2 authorize-security-group-ingress --group-id sg-xxxxxxxx --protocol tcp --port 22 --cidr 0.0.0.0/0
 
-Now time to launch an EC2 instance. In a single command we will launch the instance with a user data script. In addition the command will also host  a 8GiB EBS root volume plus an extra 1GiB EBS volume (dev/sdb) on which we will mount our /var/www/html directory. Additionally, the command also applies the name tag to the instance and the volumes created during launch. The user data script does a couple of things (a. Installs apache web server, starts the web service, maintains an auto-start of the webservice on reboots, downloads a responsive website code from Internet, unzips the downloaded content and places it in the apache root directory- /var/www/html, creates a backup directory and moves the html code to the backup directory, creates a Linux ext4 file system on the 1GiB volume attached as /dev/xvdb, permanently mounts the volume onto /var/www/html via fstab and restores the html code from backup directory into /var/www/html
+Now time to launch an EC2 instance. In a single command we will launch the instance with a user data script. In addition the command will also host  a 8GiB EBS root volume plus an extra 1GiB EBS volume (dev/sdb) on which we will mount our /var/www/html directory. Additionally, the command also applies the name tag to the instance and the volumes created during launch. The user data script does a couple of things (a. Installs apache web server, starts the web service, maintains an auto-start of the webservice on reboots, downloads the php-watermark-gallery code, unzips the downloaded content and places it in the apache root directory- /var/www/html/php-watermark-gallery, creates a backup directory and moves the php code to the backup directory, creates a Linux ext4 file system on the 1GiB volume attached as /dev/xvdb, permanently mounts the volume onto /var/www/html/php-watermark-gallery/ via fstab and restores the php code from backup directory into /var/www/html and sets the appropriate permissions on the directory)
 
-Open notepad++ and paste the below code in a new blank file. Save the file as clitestvpc-user-data.txt your desktop directory
 
-#!/bin/bash
-sudo yum install httpd php php-gd -y
-sudo service httpd start
-sudo chkconfig httpd on
-cd /home/ec2-user/
-sudo wget https://github.com/tinkrbay/php-watermark-gallery/archive/master.zip
-sudo unzip master.zip
-cd /var/www/html/
-sudo mkdir php-watermark-gallery
-sudo mv /home/ec2-user/php-watermark-gallery-master/* /var/www/html/php-watermark-gallery/
-cd /home/ec2-user
-sudo mkdir php-watermark-gallery-backup
-sudo mv /var/www/html/php-watermark-gallery/* /home/ec2-user/php-watermark-gallery-backup/
-sudo cp /etc/fstab /home/ec2-user/fstabbackup
-sudo mkfs -t ext4 /dev/xvdb
-sudo sed -i -- '$ a /dev/xvdb   /var/www/html/php-watermark-gallery/    ext4    defaults,nofail 0   2' /etc/fstab
-sudo mount -a
-sudo mv /home/ec2-user/php-watermark-gallery-backup/* /var/www/html/php-watermark-gallery-backup/
-sudo chmod -R 777 /var/www/html/
-sudo chown -R apache.apache /var/www/html/
-sudo service httpd restart
-
-In the below command you will have to input the full path of your clitestvpc-user-data.txt file stored on the desktop. Right click the file and copy the path and paste in the below command after filepath:// (EXAMPLE: of full path string file://C:\Users\ambar\clitest-user-data.txt)
-
+In the below command you will have to input the full path of your aws-clitestvpc-ec2-userdata.txt (found in the unzipped folder). Copy the path and paste in the below command after filepath:// (EXAMPLE: of full path string file://C:\Users\ambar\aws-clitestvpc-ec2-userdata.txt)
 
 NOTE: THE AMI ID NEEDS TO BE FOR THE AMAZON LINUX 2 IN OHIO REGION
 
