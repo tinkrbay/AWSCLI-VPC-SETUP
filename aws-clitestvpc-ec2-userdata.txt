@@ -1,0 +1,21 @@
+#!/bin/bash
+sudo yum install httpd php php-gd -y
+sudo service httpd start
+sudo chkconfig httpd on
+cd /home/ec2-user/
+sudo wget https://github.com/tinkrbay/php-watermark-gallery/archive/master.zip
+sudo unzip master.zip
+cd /var/www/html/
+sudo mkdir php-watermark-gallery
+sudo mv /home/ec2-user/php-watermark-gallery-master/* /var/www/html/php-watermark-gallery/
+cd /home/ec2-user
+sudo mkdir php-watermark-gallery-backup
+sudo mv /var/www/html/php-watermark-gallery/* /home/ec2-user/php-watermark-gallery-backup/
+sudo cp /etc/fstab /home/ec2-user/fstabbackup
+sudo mkfs -t ext4 /dev/xvdb
+sudo sed -i -- '$ a /dev/xvdb	/var/www/html/php-watermark-gallery/	ext4	defaults,nofail	0	2' /etc/fstab
+sudo mount -a
+sudo mv /home/ec2-user/php-watermark-gallery-backup/* /var/www/html/php-watermark-gallery/
+sudo chmod -R 777 /var/www/html/
+sudo chown -R apache.apache /var/www/html/
+sudo service httpd restart
