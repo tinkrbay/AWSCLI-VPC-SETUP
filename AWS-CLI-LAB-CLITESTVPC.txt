@@ -1,0 +1,431 @@
+NOTE: Some of the tasks performed via Windows AWS CLI needs you to have adminstrator privileges on your laptop/PC
+Windows 10
+Search for cmd
+Right click on cmd and click run as adminstrator, say yes to system changes
+Your cmd prompt will open up and you should be typically under C:\WINDOWS\system32>
+Change your directory to the AWSCLI program by typing "cd C:\Program Files\Amazon\AWSCLI"
+Good to GO!!!
+
+FIRST UP YOU SHOULD CONFIGURE YOUR PROFILE IN THE AWS CLI 
+
+Type "aws configure" command in the C:\Program Files\Amazon\AWSCLI windows directory
+AWS Access Key ID: Input the value from the credentials.csv downloaded for awsadmincli IAM user
+AWS Secret Access Key: Input the value from the credentials.csv downloaded for awsadmincli IAM user
+Default region name: us-east-2
+Default output format: json
+
+
+NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****
+
+ENSURE THAT YOUR DEFAULT REGION IS SET TO us-east-2 in AWS CLI PROFILE. IF NOT YOU MAY END UP IN CREATING ALL THE RESOURCES IN A DIFFERENT REGION :)
+YOU WILL NEED TO REPLACE THE "ID" VALUES.. THE ID VALUES USED IN THIS GUIDE ARE FROM MY ACCOUNT AND FOR DEMO
+DO NOT CREATE ERRORS BY SIMPLY COPYING PASTING THE CLI COMMANDS
+YOU WILL NEED TO CHANGE THE VPC/SUBNET/AND OTHER IDs AS THEY OCCUR/RESULT FROM YOUR CONFIGURATIONS
+BE SLOW...BUT SUCCESSFUL!!!!!
+
+NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****NOTE****
+
+
+
+
+START HERE... GET SET GO!!!!
+
+###############################################################################################
+STEP-1: VPC CREATION
+###############################################################################################
+
+
+Create the VPC in North Virginia
+aws ec2 create-vpc --cidr-block 172.31.0.0/16
+
+The returned JSON will look something like this
+{
+    "Vpc": {
+        "VpcId": "vpc-xxxxxxxx",
+        "InstanceTenancy": "default",
+        "Tags": [],
+        "CidrBlockAssociationSet": [
+            {
+                "AssociationId": "vpc-cidr-assoc-727d8f1e",
+                "CidrBlock": "172.31.0.0/16",
+                "CidrBlockState": {
+                    "State": "associated"
+                }
+            }
+        ],
+        "Ipv6CidrBlockAssociationSet": [],
+        "State": "pending",
+        "DhcpOptionsId": "dopt-8636a1e0",
+        "CidrBlock": "172.31.0.0/16",
+        "IsDefault": false
+    }
+}
+
+Take a note of the VPC ID from the above output
+
+Lets name tag this VPC
+aws ec2 create-tags --resources vpc-xxxxxxxx --tags Key=Name,Value=clitestvpc
+
+###############################################################################################
+STEP-1: WEBAPPS SUBNET CREATION
+###############################################################################################
+
+Create a webapps public subnet in us-east-2a for xxxxxxxx
+
+aws ec2 create-subnet --vpc-id vpc-xxxxxxxx --cidr-block 172.31.1.0/24 --availability-zone us-east-2a
+
+Returned JSON output
+{
+    "Subnet": {
+        "AvailabilityZone": "us-east-2a",
+        "AvailableIpAddressCount": 251,
+        "DefaultForAz": false,
+        "Ipv6CidrBlockAssociationSet": [],
+        "VpcId": "vpc-xxxxxxxx",
+        "State": "pending",
+        "MapPublicIpOnLaunch": false,
+        "SubnetId": "subnet-xxxxxxxx",
+        "CidrBlock": "172.31.1.0/24",
+        "AssignIpv6AddressOnCreation": false
+    }
+}
+
+Take a note of the subnet ID
+
+add a name tag
+aws ec2 create-tags --resources subnet-xxxxxxxx --tags Key=Name,Value=clitestvpc-webapps1a
+
+make it public
+aws ec2 modify-subnet-attribute --subnet-id subnet-xxxxxxxx --map-public-ip-on-launch
+
+Describe your subnet to confirm the auto-assignment of public IPs
+
+aws ec2 describe-subnets --subnet-id subnet-xxxxxxxx
+
+The returned JSON
+
+{
+    "Subnets": [
+        {
+            "AvailabilityZone": "us-east-2a",
+            "Tags": [
+                {
+                    "Value": "clitestvpc-webapps1a",
+                    "Key": "Name"
+                }
+            ],
+            "AvailableIpAddressCount": 251,
+            "DefaultForAz": false,
+            "Ipv6CidrBlockAssociationSet": [],
+            "VpcId": "vpc-xxxxxxxx",
+            "State": "available",
+            "MapPublicIpOnLaunch": true,
+            "SubnetId": "subnet-xxxxxxxx",
+            "CidrBlock": "172.31.1.0/24",
+            "AssignIpv6AddressOnCreation": false
+        }
+    ]
+}
+
+###############################################################################################
+STEP-3: DATABASE SUBNET CREATION
+###############################################################################################
+
+Create a DATABASE subnet in us-east-2a for xxxxxxxx
+
+aws ec2 create-subnet --vpc-id vpc-xxxxxxxx --cidr-block 172.31.2.0/24 --availability-zone us-east-2a
+
+Returned JSON output
+{
+    "Subnet": {
+        "AvailabilityZone": "us-east-2a",
+        "AvailableIpAddressCount": 251,
+        "DefaultForAz": false,
+        "Ipv6CidrBlockAssociationSet": [],
+        "VpcId": "vpc-xxxxxxxx",
+        "State": "pending",
+        "MapPublicIpOnLaunch": false,
+        "SubnetId": "subnet-xxxxxxxx",
+        "CidrBlock": "172.31.201.0/24",
+        "AssignIpv6AddressOnCreation": false
+    }
+}
+
+Take a note of the subnet ID
+
+add a name tag
+aws ec2 create-tags --resources subnet-xxxxxxxx --tags Key=Name,Value=clitestvpc-database1a
+
+aws ec2 describe-subnets --subnet-id subnet-xxxxxxxx
+
+The returned JSON
+
+{
+    "Subnets": [
+        {
+            "AvailabilityZone": "us-east-2a",
+            "Tags": [
+                {
+                    "Value": "clitestvpc-database1a",
+                    "Key": "Name"
+                }
+            ],
+            "AvailableIpAddressCount": 251,
+            "DefaultForAz": false,
+            "Ipv6CidrBlockAssociationSet": [],
+            "VpcId": "vpc-xxxxxxxx",
+            "State": "available",
+            "MapPublicIpOnLaunch": false,
+            "SubnetId": "subnet-xxxxxxxx",
+            "CidrBlock": "172.31.2.0/24",
+            "AssignIpv6AddressOnCreation": false
+        }
+    ]
+}
+
+So now we have a VPC and two subnets, i.e. one public (webapps)  & one private (database) in us-east-2a
+
+Now we will create two seperate routing tables (public and private) and add the respective subnets to them
+
+Create Public route table 
+
+aws ec2 create-route-table --vpc-id vpc-xxxxxxxx
+
+The returned JSON
+
+{
+    "RouteTable": {
+        "Associations": [],
+        "RouteTableId": "rtb-78923607",
+        "VpcId": "vpc-xxxxxxxx",
+        "PropagatingVgws": [],
+        "Tags": [],
+        "Routes": [
+            {
+                "GatewayId": "local",
+                "DestinationCidrBlock": "172.31.1.0/24",
+                "State": "active",
+                "Origin": "CreateRouteTable"
+            }
+        ]
+    }
+}
+
+Note the route table ID and name tag it
+
+aws ec2 create-tags --resources rtb-78923607 --tags Key=Name,Value=clitestvpc-webapps-rt
+
+Associate the clitestvpc-webapps1a subnet with the public routing table 
+
+aws ec2 associate-route-table --route-table-id rtb-xxxxxxxx --subnet-id subnet-xxxxxxxx
+
+The returned JSON
+
+{
+    "AssociationId": "rtbassoc-xxxxxxxx"
+}
+
+Next we will create the Database route table, tag it and associate the clitestvpc-database1a subnet with it
+
+aws ec2 create-route-table --vpc-id vpc-xxxxxxxx
+
+The returned JSON
+{
+    "RouteTable": {
+        "Associations": [],
+        "RouteTableId": "rtb-xxxxxxxx",
+        "VpcId": "vpc-xxxxxxxx",
+        "PropagatingVgws": [],
+        "Tags": [],
+        "Routes": [
+            {
+                "GatewayId": "local",
+                "DestinationCidrBlock": "172.31.1.0/24",
+                "State": "active",
+                "Origin": "CreateRouteTable"
+            }
+        ]
+    }
+}
+
+Let's tag it
+
+aws ec2 create-tags --resources rtb-xxxxxxxx --tags Key=Name,Value=clitestvpc-database-rt
+
+Let's associate the clitestvpc-database1a
+
+aws ec2 associate-route-table --route-table-id rtb-xxxxxxxx --subnet-id subnet-xxxxxxxx
+
+The returned JSON
+
+{
+    "AssociationId": "rtbassoc-xxxxxxxx"
+}
+
+So for now One VPC, Two Subnets (Pub & Pvt), Two route tables and respective subnets associated
+
+Now we will make our clitestvpc-webapps1a accessible via Internet Gateway
+
+Create an Internet gateway first
+aws ec2 create-internet-gateway
+
+The returned JSON
+
+{
+    "InternetGateway": {
+        "Tags": [],
+        "Attachments": [],
+        "InternetGatewayId": "igw-xxxxxxxx"
+    }
+}
+
+Name tag the IGW
+
+aws ec2 create-tags --resources igw-b888aec0 --tags Key=Name,Value=clitestvpc-igw
+
+Attach it to the VPC
+
+aws ec2 attach-internet-gateway --vpc-id vpc-xxxxxxxx --internet-gateway-id igw-xxxxxxxx
+
+Next we will create a default route in the clitestvpc-webapps-rt routing table with a next hop of the IGW created
+
+NOTE: THE ROUTE TABLE ID IS THAT OF THE clitestvpc-webapps-rt
+
+aws ec2 create-route --route-table-id rtb-xxxxxxxx --destination-cidr-block 0.0.0.0/0 --gateway-id igw-xxxxxxxx
+
+The returned JSON
+
+{
+    "Return": true
+}
+
+To confirm the addition of the route
+
+aws ec2 describe-route-tables --route-table-id rtb-xxxxxxxx (INSERT THE ROUTE TABLE ID OF THE clitestvpc-webapps-rt routing table)
+
+The returned JSON
+
+{
+    "RouteTables": [
+        {
+            "Associations": [
+                {
+                    "SubnetId": "subnet-xxxxxxxx",
+                    "RouteTableAssociationId": "rtbassoc-xxxxxxxx",
+                    "Main": false,
+                    "RouteTableId": "rtb-xxxxxxxx"
+                }
+            ],
+            "RouteTableId": "rtb-xxxxxxxx",
+            "VpcId": "vpc-xxxxxxxx",
+            "PropagatingVgws": [],
+            "Tags": [
+                {
+                    "Value": "clitestvpc-webapps-rt",
+                    "Key": "Name"
+                }
+            ],
+            "Routes": [
+                {
+                    "GatewayId": "local",
+                    "DestinationCidrBlock": "172.31.1.0/24",
+                    "State": "active",
+                    "Origin": "CreateRouteTable"
+                },
+                {
+                    "GatewayId": "igw-xxxxxxxx",
+                    "DestinationCidrBlock": "0.0.0.0/0",
+                    "State": "active",
+                    "Origin": "CreateRoute"
+                }
+            ]
+        }
+    ]
+}
+
+Next we will create the supporting elements (key pair, Security Group for our EC2 services)
+
+Generate a new key pair (Note the use of double quotes for KeyMaterial is specific to Windows environment, For Linux clients it's single quotes)
+aws ec2 create-key-pair --key-name clitestvpc --query "KeyMaterial" --output text > clitestvpc.pem
+
+The above command generates a keypair in your AWS account (Ohio region) and downloads the key as a PEM file in the local folder of AWSCLI on your windows machine
+
+You can optionally convert this downloaded PEM file into a .ppk file using PuttyGen OR alternatively do it later when you need to SSH
+
+Next we will create a Security Group for our Instance
+
+aws ec2 create-security-group --group-name clitestvpc-alltraffic --description "Security group for CLI Testing" --vpc-id vpc-xxxxxxxx
+
+The returned JSON
+{
+    "GroupId": "sg-xxxxxxxx"
+}
+
+Next we will add the inbound rules to the security group created above
+aws ec2 authorize-security-group-ingress --group-id sg-xxxxxxxx --protocol tcp --port 80 --cidr 0.0.0.0/0
+aws ec2 authorize-security-group-ingress --group-id sg-xxxxxxxx --protocol tcp --port 22 --cidr 0.0.0.0/0
+
+Now time to launch an EC2 instance. In a single command we will launch the instance with a user data script. In addition the command will also host  a 8GiB EBS root volume plus an extra 1GiB EBS volume (dev/sdb) on which we will mount our /var/www/html directory. Additionally, the command also applies the name tag to the instance and the volumes created during launch. The user data script does a couple of things (a. Installs apache web server, starts the web service, maintains an auto-start of the webservice on reboots, downloads a responsive website code from Internet, unzips the downloaded content and places it in the apache root directory- /var/www/html, creates a backup directory and moves the html code to the backup directory, creates a Linux ext4 file system on the 1GiB volume attached as /dev/xvdb, permanently mounts the volume onto /var/www/html via fstab and restores the html code from backup directory into /var/www/html
+
+Open notepad++ and paste the below code in a new blank file. Save the file as clitestvpc-user-data.txt your desktop directory
+
+#!/bin/bash
+sudo yum install httpd php php-gd -y
+sudo service httpd start
+sudo chkconfig httpd on
+cd /home/ec2-user/
+sudo wget https://github.com/tinkrbay/php-watermark-gallery/archive/master.zip
+sudo unzip master.zip
+cd /var/www/html/
+sudo mkdir php-watermark-gallery
+sudo mv /home/ec2-user/php-watermark-gallery-master/* /var/www/html/php-watermark-gallery/
+cd /home/ec2-user
+sudo mkdir php-watermark-gallery-backup
+sudo mv /var/www/html/php-watermark-gallery/* /home/ec2-user/php-watermark-gallery-backup/
+sudo cp /etc/fstab /home/ec2-user/fstabbackup
+sudo mkfs -t ext4 /dev/xvdb
+sudo sed -i -- '$ a /dev/xvdb	/var/www/html/php-watermark-gallery/	ext4	defaults,nofail	0	2' /etc/fstab
+sudo mount -a
+sudo mv /home/ec2-user/php-watermark-gallery-backup/* /var/www/html/php-watermark-gallery-backup/
+sudo chmod -R 777 /var/www/html/
+sudo chown -R apache.apache /var/www/html/
+sudo service httpd restart
+
+In the below command you will have to input the full path of your clitestvpc-user-data.txt file stored on the desktop. Right click the file and copy the path and paste in the below command after filepath:// (EXAMPLE: of full path string file://C:\Users\ambar\clitest-user-data.txt)
+
+
+NOTE: THE AMI ID NEEDS TO BE FOR THE AMAZON LINUX 2 IN OHIO REGION
+
+aws ec2 run-instances --image-id ami-xxxxxxxx --count 1 --instance-type t2.micro --key-name clitestvpc --subnet-id subnet-xxxxxxxx --security-group-ids sg-xxxxxxxx --user-data file://full-path-and-file-name-of-clitest-user-data.txt --block-device-mappings "[{\"DeviceName\":\"/dev/sdb\",\"Ebs\":{\"VolumeSize\":1,\"DeleteOnTermination\":false}}]" --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=clitestvpc-webapps-1}]' 'ResourceType=volume,Tags=[{Key=Name,Value=clitestvpc-webapps-1}]' 
+
+Run the below command to observe the instance created
+
+aws ec2 describe-instances
+
+You will see a JSON output that narrates the entire instance.
+
+Note the instance ID
+
+aws ec2 create-image --instance-id i-xxxxxxxx --name "clitestvpc-webapps-1" --description "webapps testing for clitestvpc"
+
+The returned JSON
+
+{
+    "ImageId": "ami-xxxxxxxx"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
